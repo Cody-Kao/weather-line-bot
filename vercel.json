@@ -1,0 +1,14 @@
+{
+    "builds": [
+      {
+        "src": "weather-line-bot/main.py",
+        "use": "@vercel/python"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/(.*)",
+        "dest": "weather-line-bot/main.py"
+      }
+    ]
+  }
