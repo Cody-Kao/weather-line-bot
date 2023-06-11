@@ -1,2 +1,0 @@
-Flask == 2.2.3
-line-bot-sdk
