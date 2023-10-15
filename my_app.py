@@ -16,8 +16,10 @@ from linebot.models import *
 
 import os
 
-import matplotlib, matplotlib.pyplot as plt
-matplotlib.use('Agg')
+import matplotlib
+matplotlib.use('Agg') 
+import matplotlib.pyplot as plt
+
 import io
 import base64
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -33,7 +35,7 @@ city_to_code = {"宜蘭縣":'F-D0047-001',"基隆市":'F-D0047-049',"台北市":
           "嘉義市":'F-D0047-057',"嘉義縣":'F-D0047-029',"台南市":'F-D0047-077',"高雄市":'F-D0047-065',"屏東縣":'F-D0047-033',
           "花蓮縣":'F-D0047-041',"台東縣":'F-D0047-037',"澎湖縣":'F-D0047-045',"連江縣":'F-D0047-081',"金門縣":'F-D0047-085'}
 
-authorization = 'CWB-5C5D20F7-A13F-43B9-8B93-A217D7109A50'
+authorization = 'CWA-C25BE80D-2D81-4AEE-86BC-8FC913D235C2'
 
 query_dict = {'tem':'溫度', 'rainfall':'降雨機率'}
 
@@ -124,7 +126,7 @@ def generate_image_and_link(tem_or_rainfall, city, region, today_or_tomorrow):
 
 def get_pm25(user_city):
     user_city = user_city.replace('台', '臺')
-    url = 'https://data.epa.gov.tw/api/frontstage/datastore/search-result.download'
+    url = 'http://data.moenv.gov.tw/api/frontstage/datastore/search-result.download'
     data = {'resource_id': "d5fa0c88-b846-4362-9ed1-bf283aa52857", 'limit': 100, 'offset': 0, 'download_type': "json"}
     req = requests.post(url, data = data)
     file = json.loads(req.content, encoding='utf-8')
