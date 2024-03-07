@@ -223,7 +223,7 @@ def handle_message(event):
 def handle_message(event):
     with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
-        complete_address = event.message.address[5:]
+        complete_address = event.message.address.split("台灣")[1]
         address = ""
         for val in complete_address:
             address+= val
