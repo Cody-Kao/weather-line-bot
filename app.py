@@ -22,19 +22,7 @@ from linebot.v3.messaging import (
     TextMessage
 )   
 
-from linebot.v3.webhooks import ImageMessageContent
-from linebot.v3.webhooks.models.content_provider import ContentProvider
-
 import os
-
-import matplotlib
-matplotlib.use('Agg') 
-import matplotlib.pyplot as plt
-
-import io
-import base64
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-matplotlib.rc('font', family='Microsoft JhengHei') # 讓matplotlib正確顯示中文
 
 import re
 
@@ -51,15 +39,6 @@ authorization = 'CWA-C25BE80D-2D81-4AEE-86BC-8FC913D235C2'
 query_dict = {'tem':'溫度', 'rainfall':'降雨機率'}
 
 measure_dict = {'tem':"攝氏°C", 'rainfall':"機率%"} 
-
-def img_to_png(img):
-    # Convert plot to PNG image
-    pngImage = io.BytesIO()
-    FigureCanvas(img).print_png(pngImage)
-    
-    # Encode PNG image to base64 string
-    pngImageB64String = base64.b64encode(pngImage.getvalue()).decode('utf8')
-    return pngImageB64String
 
 def getTemOrRain(file, query, city, region):
     prefix = file['records']['locations'][0]['location']      
