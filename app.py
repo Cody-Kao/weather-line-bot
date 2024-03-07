@@ -61,52 +61,30 @@ def img_to_png(img):
     pngImageB64String = base64.b64encode(pngImage.getvalue()).decode('utf8')
     return pngImageB64String
 
-def draw(file, query, city, region):
-    # 針對所有字體進行修改
-    font = {
-        'weight' : 'bold',
-        'size'   : 15}
-    matplotlib.rc('font', **font)
+def getTemOrRain(file, query, city, region):
     prefix = file['records']['locations'][0]['location']      
-    y = []
-    labels = []
+    dataSet = []
     if query == 'tem':
         for reg in prefix:
             if reg['locationName'] == region:
                 for description in reg['weatherElement'][0]['time']:
-                    y.append(int(description['elementValue'][0]['value'].split('。')[2][-3:-1]))
-                    labels.append(description['startTime'][-8:])
+                    dataSet.append(int(description['elementValue'][0]['value'].split('。')[2][-3:-1]))
     elif query == 'rainfall':
         for reg in prefix:
             if reg['locationName'] == region:
                 for description in reg['weatherElement'][0]['time']:
-                    y.append(int(description['elementValue'][0]['value'].split('。')[1][-3:-1]))
-                    labels.append(description['startTime'][-8:])
+                    dataSet.append(int(description['elementValue'][0]['value'].split('。')[1][-3:-1]))
     date = prefix[0]['weatherElement'][0]['time'][0]['startTime'][:10]
     print('date: ', date)
-    x = [i for i in range(len(y))]
-    fig = plt.figure(figsize=(10.5,6))
-    axis = fig.add_subplot(1, 1, 1)
-    axis.set_title(city+'-'+region+'('+date+')')
-    axis.set_xlabel("時間",fontsize=18)
-    axis.set_ylabel(measure_dict[query], fontsize=18, rotation=0, loc='top')
-    axis.set_ylim(0, 100) # 設定y軸的範圍
-    axis.set_xticks(x, labels, fontsize=15)
-    axis.grid()
-    for i,j in zip(x,y):
-        axis.annotate(str(j),xy=(i+0.05,j+0.05), ha='center', weight ='bold',fontsize=15) # 標記加上註記的點位，並對x y值做一些offset
-    axis.plot(x, y, "o-", label=query_dict[query])
-    plt.legend(
-        loc='best',
-        shadow=True,
-        facecolor='#ccc',
-        edgecolor='#000',
-        title=query_dict[query],
-        title_fontsize=20)
-    plt.savefig('foo.png')
-    return fig
+    
+    print(dataSet)
+    delimitor = "=="*12
+    if query == 'tem':
+        return f"{date}\n{delimitor}最高溫: {max(dataSet)}°C\n平均溫度: {sum(dataSet)//len(dataSet)}°C\n最低溫度: {min(dataSet)}°C"
+    elif query == 'rainfall':
+        return f"{date}\n{delimitor}最高降雨機率: {max(dataSet)}%\n平均降雨機率: {sum(dataSet)//len(dataSet)}%\n最低降雨機率: {min(dataSet)}%"
 
-def generate_image_and_link(tem_or_rainfall, city, region, today_or_tomorrow):
+def getData(tem_or_rainfall, city, region, today_or_tomorrow):
     if today_or_tomorrow:
         date = datetime.datetime.now().strftime('%Y-%m-%d')
     else:
@@ -116,26 +94,9 @@ def generate_image_and_link(tem_or_rainfall, city, region, today_or_tomorrow):
     print("------------------url-----------------", url)
     req = requests.get(url)
     file = json.loads(req.content)
-    img = draw(file, tem_or_rainfall, city, region)
-    #draw(file, 'rainfall', city, region)
-    res = img_to_png(img)
+    data = getTemOrRain(file, tem_or_rainfall, city, region)
     
-
-    headers = {"Authorization": "Client-ID 11c8e32c081b4ae"}
-
-    url = "https://api.imgur.com/3/image"
-
-    req = requests.post(
-        url, 
-        headers = headers,
-        data = { 
-            'image': res
-        }
-    )
-    print(req.status_code)
-    data = json.loads(req.text)['data']
-    print(data['link'])
-    return data['link']
+    return data
 
 def get_pm25(user_city):
     user_city = user_city.replace('台', '臺')
@@ -226,46 +187,20 @@ def handle_message(event):
         elif re.match('今明降雨機率',user_text):
             if event.source.user_id in user_position:
                 user_address = user_position[event.source.user_id]
-                today_image_link = generate_image_and_link('rainfall', user_address[0], user_address[1], 1)
-                tomorrow_image_link = generate_image_and_link('rainfall', user_address[0], user_address[1], 0)
-                today_image = ImageMessageContent(original_content_url=today_image_link, preview_image_url=today_image_link)
-                tomorrow_image = ImageMessageContent(original_content_url=tomorrow_image_link, preview_image_url=tomorrow_image_link)
-                message = [today_image, tomorrow_image] # 目前如果要回覆多則訊息，好像只能是同樣類型的message
+                today_data = getData('rainfall', user_address[0], user_address[1], 1)
+                tomorrow_data = getData('rainfall', user_address[0], user_address[1], 0)
+                info = f"以下為{user_address[0]}{user_address[1]}之降雨機率\n\n{today_data}\n\n{tomorrow_data}"
+                message = TextMessage(text=info) # 目前如果要回覆多則訊息，好像只能是同樣類型的message
             else: 
                 message = TextMessage(text='請先設定使用者位置$', emojis=emoji)
         elif re.match('今明溫度',user_text):
             if event.source.user_id in user_position:
                 user_address = user_position[event.source.user_id]
-                today_image_link = generate_image_and_link('tem', user_address[0], user_address[1], 1)
-                #tomorrow_image_link = generate_image_and_link('tem', user_address[0], user_address[1], 0)
-                print("ImageMessageContent is processing")
-
-
-                today_image_content = ImageMessageContent.parse_obj({
-                    "type": "image",
-                    "id": body["events"][0]["message"]["id"],
-                    "content_provider": ContentProvider.parse_obj({
-                        "type": "external",
-                        "originalContentUrl": today_image_link,  # Replace with the actual URL
-                        "previewImageUrl": today_image_link,  # Replace with the actual URL
-                    }),
-                    "image_set": None,
-                    "quoteToken": body["events"][0]["message"]["quoteToken"]
-                })
-                """
-                today_image_content = ImageMessageContent(
-                    id=body["events"][0]["message"]["id"],
-                    contentProvider=ContentProvider(
-                        type="external",
-                        originalContentUrl=today_image_link,
-                        previewImageUrl=today_image_link
-                    ),
-                    quoteToken=body["events"][0]["message"]["quoteToken"]
-                )
-                """
-                message = today_image_content
-
-                print("ImageMessageContent is done")
+                today_data = getData('tem', user_address[0], user_address[1], 1)
+                tomorrow_data = getData('tem', user_address[0], user_address[1], 0)
+                info = f"以下為{user_address[0]}{user_address[1]}之氣溫\n\n{today_data}\n\n{tomorrow_data}"
+                message = TextMessage(text=info) # 目前如果要回覆多則訊息，好像只能是同樣類型的message
+                
             else:  
                 message = TextMessage(text='請先設定使用者位置$', emojis=emoji)
         elif re.match('當前pm2.5',user_text):
