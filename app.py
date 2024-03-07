@@ -34,7 +34,7 @@ city_to_code = {"宜蘭縣":'F-D0047-001',"基隆市":'F-D0047-049',"台北市":
           "嘉義市":'F-D0047-057',"嘉義縣":'F-D0047-029',"台南市":'F-D0047-077',"高雄市":'F-D0047-065',"屏東縣":'F-D0047-033',
           "花蓮縣":'F-D0047-041',"台東縣":'F-D0047-037',"澎湖縣":'F-D0047-045',"連江縣":'F-D0047-081',"金門縣":'F-D0047-085'}
 
-authorization = os.environ.get("WEATHER-API-CODE")
+authorization = os.environ.get('WEATHER_API_CODE')
 
 query_dict = {'tem':'溫度', 'rainfall':'降雨機率'}
 
@@ -142,8 +142,8 @@ def handle_message(event):
             if event.source.user_id in user_position:
                 city, region = user_position[event.source.user_id]
                 now = datetime.datetime.now()
-                now_plus_three_hours = now + datetime.timedelta(hours=3)
-                url = f'https://opendata.cwa.gov.tw/api/v1/rest/datastore/{city_to_code[city]}?Authorization={authorization}&format=JSON&elementName=WeatherDescription&timeFrom={now.strftime("%Y-%m-%d")}T{now.strftime("%H")}%3A00%3A00&timeTo={now_plus_three_hours.strftime("%Y-%m-%d")}T{now_plus_three_hours.strftime("%H")}%3A00%3A00'
+                #now_plus_three_hours = now + datetime.timedelta(hours=3)
+                url = f'https://opendata.cwa.gov.tw/api/v1/rest/datastore/{city_to_code[city]}?Authorization={authorization}&format=JSON&elementName=WeatherDescription&timeFrom={now.strftime('%Y-%m-%d')}T00%3A00%3A00&timeTo={now.strftime('%Y-%m-%d')}T23%3A00%3A00'
                 print("=================url========================", url)
                 req = requests.get(url)
                 print("------------------------Code--------------------: ",req.status_code)
