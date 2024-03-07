@@ -152,6 +152,9 @@ def handle_message(event):
 
                 for reg in elements:
                     if reg['locationName'] == region:
+                        print(reg)
+                        print("----------------------------")
+                        print(reg['weatherElement'][0]['time'])
                         description = reg['weatherElement'][0]['time'][0]['elementValue'][0]['value'].split('。')
                         print('description: ', description)
                         tem = description[2][-3:-1]
