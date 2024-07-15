@@ -190,6 +190,10 @@ def get_pm25(user_city):
 
 app = Flask(__name__)
 
+@app.route("/")
+def home():
+    return "Hello World"
+
 # 必須放上自己的Channel Access Token
 configuration = Configuration(access_token=os.environ.get('channel_access_token')) # os.environ['channel_access_token']
 # 必須放上自己的Channel Secret
