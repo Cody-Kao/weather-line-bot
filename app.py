@@ -22,21 +22,17 @@ from linebot.v3.messaging import (
     TextMessage
 )   
 
-from linebot.v3.webhooks import ImageMessageContent
-from linebot.v3.webhooks.models.content_provider import ContentProvider
-
 import os
+
+import re
 
 import matplotlib
 matplotlib.use('Agg') 
 import matplotlib.pyplot as plt
-
 import io
 import base64
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 matplotlib.rc('font', family='Microsoft JhengHei') # 讓matplotlib正確顯示中文
-
-import re
 
 global user_position
 user_position = {}
@@ -46,11 +42,13 @@ city_to_code = {"宜蘭縣":'F-D0047-001',"基隆市":'F-D0047-049',"台北市":
           "嘉義市":'F-D0047-057',"嘉義縣":'F-D0047-029',"台南市":'F-D0047-077',"高雄市":'F-D0047-065',"屏東縣":'F-D0047-033',
           "花蓮縣":'F-D0047-041',"台東縣":'F-D0047-037',"澎湖縣":'F-D0047-045',"連江縣":'F-D0047-081',"金門縣":'F-D0047-085'}
 
-authorization = 'CWA-C25BE80D-2D81-4AEE-86BC-8FC913D235C2'
+authorization = os.environ.get('WEATHER_API_CODE')
 
 query_dict = {'tem':'溫度', 'rainfall':'降雨機率'}
 
 measure_dict = {'tem':"攝氏°C", 'rainfall':"機率%"} 
+
+image_store = {}
 
 def img_to_png(img):
     # Convert plot to PNG image
@@ -103,10 +101,65 @@ def draw(file, query, city, region):
         edgecolor='#000',
         title=query_dict[query],
         title_fontsize=20)
-    plt.savefig('foo.png')
     return fig
 
 def generate_image_and_link(tem_or_rainfall, city, region, today_or_tomorrow):
+    if today_or_tomorrow:
+        date = datetime.datetime.now().strftime('%Y-%m-%d')
+    else:
+        date = (datetime.datetime.now() + datetime.timedelta(1)).strftime('%Y-%m-%d')
+    url = f'https://opendata.cwa.gov.tw/api/v1/rest/datastore/{city_to_code[city]}?Authorization={authorization}&format=JSON&elementName=WeatherDescription&timeFrom={date}T00%3A00%3A00&timeTo={date}T23%3A00%3A00'
+    print("------------------url-----------------", url)
+    req = requests.get(url)
+    file = json.loads(req.content)
+
+    if f"{date}{tem_or_rainfall}{city}{region}" not in image_store:
+        img = draw(file, tem_or_rainfall, city, region)
+        res = img_to_png(img)
+    else:
+        print("cache hits!")
+        return image_store[f"{date}{tem_or_rainfall}{city}{region}"]
+
+    headers = {"Authorization": "Client-ID 11c8e32c081b4ae"}
+
+    url = "https://api.imgur.com/3/image"
+
+    req = requests.post(
+        url, 
+        headers = headers,
+        data = {  'image': res
+        }
+    )
+    print(req.status_code)
+    data = json.loads(req.text)['data']
+    image_store[f"{date}{tem_or_rainfall}{city}{region}"] = data['link'] # save the url to the in-memory store
+    print(data['link'])
+    return data['link']
+
+def getTemOrRain(file, query, city, region):
+    prefix = file['records']['locations'][0]['location']      
+    dataSet = []
+    if query == 'tem':
+        for reg in prefix:
+            if reg['locationName'] == region:
+                for description in reg['weatherElement'][0]['time']:
+                    dataSet.append(int(description['elementValue'][0]['value'].split('。')[2][-3:-1]))
+    elif query == 'rainfall':
+        for reg in prefix:
+            if reg['locationName'] == region:
+                for description in reg['weatherElement'][0]['time']:
+                    dataSet.append(int(description['elementValue'][0]['value'].split('。')[1][-3:-1]))
+    date = prefix[0]['weatherElement'][0]['time'][0]['startTime'][:10]
+    print('date: ', date)
+    
+    print(dataSet)
+    delimitor = "=="*12
+    if query == 'tem':
+        return f"{date}\n{delimitor}最高溫: {max(dataSet)}°C\n平均溫度: {sum(dataSet)//len(dataSet)}°C\n最低溫度: {min(dataSet)}°C"
+    elif query == 'rainfall':
+        return f"{date}\n{delimitor}最高降雨機率: {max(dataSet)}%\n平均降雨機率: {sum(dataSet)//len(dataSet)}%\n最低降雨機率: {min(dataSet)}%"
+
+def getData(tem_or_rainfall, city, region, today_or_tomorrow):
     if today_or_tomorrow:
         date = datetime.datetime.now().strftime('%Y-%m-%d')
     else:
@@ -116,26 +169,9 @@ def generate_image_and_link(tem_or_rainfall, city, region, today_or_tomorrow):
     print("------------------url-----------------", url)
     req = requests.get(url)
     file = json.loads(req.content)
-    img = draw(file, tem_or_rainfall, city, region)
-    #draw(file, 'rainfall', city, region)
-    res = img_to_png(img)
+    data = getTemOrRain(file, tem_or_rainfall, city, region)
     
-
-    headers = {"Authorization": "Client-ID 11c8e32c081b4ae"}
-
-    url = "https://api.imgur.com/3/image"
-
-    req = requests.post(
-        url, 
-        headers = headers,
-        data = { 
-            'image': res
-        }
-    )
-    print(req.status_code)
-    data = json.loads(req.text)['data']
-    print(data['link'])
-    return data['link']
+    return data
 
 def get_pm25(user_city):
     user_city = user_city.replace('台', '臺')
@@ -155,10 +191,9 @@ def get_pm25(user_city):
 app = Flask(__name__)
 
 # 必須放上自己的Channel Access Token
-configuration = Configuration(access_token='aR/Lyq9Xtq1T/9zJWqB2euZv4lvVxCVI25FNmZCHixs9TNqQzLbnUs8wlcXXbg/eP9FD419mtAk9yQQ8+BfO4r2HYXxSB/6czA33H/fH2roPCBf/hf9RU/fjaHt3uWQspNS5t2MU7M7OUgmbXM17EAdB04t89/1O/w1cDnyilFU=')
-# line_bot_api = LineBotApi('aR/Lyq9Xtq1T/9zJWqB2euZv4lvVxCVI25FNmZCHixs9TNqQzLbnUs8wlcXXbg/eP9FD419mtAk9yQQ8+BfO4r2HYXxSB/6czA33H/fH2roPCBf/hf9RU/fjaHt3uWQspNS5t2MU7M7OUgmbXM17EAdB04t89/1O/w1cDnyilFU=') # os.environ['channel_access_token']
+configuration = Configuration(access_token=os.environ.get('channel_access_token')) # os.environ['channel_access_token']
 # 必須放上自己的Channel Secret
-handler = WebhookHandler('c2df860edc06a0425744fe251c211721') # os.environ['channel_secret']
+handler = WebhookHandler(os.environ.get('channel_secret')) # os.environ['channel_secret']
 
 # line_bot_api.push_message('U2ddc3390d5074b7f187a3e5518ed3480', TextSendMessage(text='你可以開始了')) # os.environ['user_id']
 
@@ -202,8 +237,8 @@ def handle_message(event):
             if event.source.user_id in user_position:
                 city, region = user_position[event.source.user_id]
                 now = datetime.datetime.now()
-                now_plus_three_hours = now + datetime.timedelta(hours=3)
-                url = f'https://opendata.cwa.gov.tw/api/v1/rest/datastore/{city_to_code[city]}?Authorization={authorization}&format=JSON&elementName=WeatherDescription&timeFrom={now.strftime("%Y-%m-%d")}T{now.strftime("%H")}%3A00%3A00&timeTo={now_plus_three_hours.strftime("%Y-%m-%d")}T{now_plus_three_hours.strftime("%H")}%3A00%3A00'
+                #now_plus_three_hours = now + datetime.timedelta(hours=3)
+                url = f'https://opendata.cwa.gov.tw/api/v1/rest/datastore/{city_to_code[city]}?Authorization={authorization}&format=JSON&elementName=WeatherDescription&timeFrom={now.strftime('%Y-%m-%d')}T00%3A00%3A00&timeTo={now.strftime('%Y-%m-%d')}T23%3A00%3A00'
                 print("=================url========================", url)
                 req = requests.get(url)
                 print("------------------------Code--------------------: ",req.status_code)
@@ -212,6 +247,9 @@ def handle_message(event):
 
                 for reg in elements:
                     if reg['locationName'] == region:
+                        print(reg)
+                        print("----------------------------")
+                        print(reg['weatherElement'][0]['time'])
                         description = reg['weatherElement'][0]['time'][0]['elementValue'][0]['value'].split('。')
                         print('description: ', description)
                         tem = description[2][-3:-1]
@@ -226,46 +264,100 @@ def handle_message(event):
         elif re.match('今明降雨機率',user_text):
             if event.source.user_id in user_position:
                 user_address = user_position[event.source.user_id]
-                today_image_link = generate_image_and_link('rainfall', user_address[0], user_address[1], 1)
-                tomorrow_image_link = generate_image_and_link('rainfall', user_address[0], user_address[1], 0)
-                today_image = ImageMessageContent(original_content_url=today_image_link, preview_image_url=today_image_link)
-                tomorrow_image = ImageMessageContent(original_content_url=tomorrow_image_link, preview_image_url=tomorrow_image_link)
-                message = [today_image, tomorrow_image] # 目前如果要回覆多則訊息，好像只能是同樣類型的message
+                today_data = getData('rainfall', user_address[0], user_address[1], 1)
+                tomorrow_data = getData('rainfall', user_address[0], user_address[1], 0)
+                textMsg = f"以下為{user_address[0]}{user_address[1]}之降雨機率\n\n{today_data}\n\n{tomorrow_data}"
+
+                today_img_url = generate_image_and_link('rainfall', user_address[0], user_address[1], 1)
+                tomorrow_img_url = generate_image_and_link('rainfall', user_address[0], user_address[1], 0)
+
+                # 一個reply_token只能被使用一次! 所以一次就把所有訊息發完
+        
+                # Headers
+                headers = {
+                    'Content-Type': 'application/json',
+                    'Authorization': f'Bearer {os.environ.get('channel_access_token')}'
+                }
+
+                # Data payload
+                data = {
+                    'replyToken': event.reply_token,
+                    'messages': [
+                        {
+                            "type":"text",
+                            "text":textMsg
+                        },
+                        {
+                            'type': 'image',
+                            "originalContentUrl": today_img_url,
+                            "previewImageUrl": today_img_url
+                        },
+                        {
+                            'type': 'image',
+                            "originalContentUrl": tomorrow_img_url,
+                            "previewImageUrl": tomorrow_img_url
+                        }
+                    ]
+                }
+
+                # Send the POST request
+                response = requests.post('https://api.line.me/v2/bot/message/reply', headers=headers, data=json.dumps(data))
+
+                # Print the response
+                print(response.status_code)
+                print(response.json())
+
+                return
             else: 
                 message = TextMessage(text='請先設定使用者位置$', emojis=emoji)
         elif re.match('今明溫度',user_text):
             if event.source.user_id in user_position:
                 user_address = user_position[event.source.user_id]
-                today_image_link = generate_image_and_link('tem', user_address[0], user_address[1], 1)
-                #tomorrow_image_link = generate_image_and_link('tem', user_address[0], user_address[1], 0)
-                print("ImageMessageContent is processing")
+                today_data = getData('tem', user_address[0], user_address[1], 1)
+                tomorrow_data = getData('tem', user_address[0], user_address[1], 0)
+                textMsg = f"以下為{user_address[0]}{user_address[1]}之氣溫\n\n{today_data}\n\n{tomorrow_data}"
+                
+                today_img_url = generate_image_and_link('tem', user_address[0], user_address[1], 1)
+                tomorrow_img_url = generate_image_and_link('tem', user_address[0], user_address[1], 0)
 
+                # 一個reply_token只能被使用一次! 所以一次就把所有訊息發完
+        
+                # Headers
+                headers = {
+                    'Content-Type': 'application/json',
+                    'Authorization': f'Bearer {os.environ.get('channel_access_token')}'
+                }
 
-                today_image_content = ImageMessageContent.parse_obj({
-                    "type": "image",
-                    "id": body["events"][0]["message"]["id"],
-                    "content_provider": ContentProvider.parse_obj({
-                        "type": "external",
-                        "originalContentUrl": today_image_link,  # Replace with the actual URL
-                        "previewImageUrl": today_image_link,  # Replace with the actual URL
-                    }),
-                    "image_set": None,
-                    "quoteToken": body["events"][0]["message"]["quoteToken"]
-                })
-                """
-                today_image_content = ImageMessageContent(
-                    id=body["events"][0]["message"]["id"],
-                    contentProvider=ContentProvider(
-                        type="external",
-                        originalContentUrl=today_image_link,
-                        previewImageUrl=today_image_link
-                    ),
-                    quoteToken=body["events"][0]["message"]["quoteToken"]
-                )
-                """
-                message = today_image_content
+                # Data payload
+                data = {
+                    'replyToken': event.reply_token,
+                    'messages': [
+                        {
+                            "type":"text",
+                            "text":textMsg
+                        },
+                        {
+                            'type': 'image',
+                            "originalContentUrl": today_img_url,
+                            "previewImageUrl": today_img_url
+                        },
+                        {
+                            'type': 'image',
+                            "originalContentUrl": tomorrow_img_url,
+                            "previewImageUrl": tomorrow_img_url
+                        }
+                    ]
+                }
 
-                print("ImageMessageContent is done")
+                # Send the POST request
+                response = requests.post('https://api.line.me/v2/bot/message/reply', headers=headers, data=json.dumps(data))
+
+                # Print the response
+                print(response.status_code)
+                print(response.json())
+
+                return
+
             else:  
                 message = TextMessage(text='請先設定使用者位置$', emojis=emoji)
         elif re.match('當前pm2.5',user_text):
@@ -306,7 +398,7 @@ def handle_message(event):
 def handle_message(event):
     with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
-        complete_address = event.message.address[5:]
+        complete_address = event.message.address.split("台灣")[1]
         address = ""
         for val in complete_address:
             address+= val
