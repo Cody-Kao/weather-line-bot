@@ -2,14 +2,19 @@
   "version": 2,
   "builds": [
     {
-      "src": "./app.py",
-      "use": "@vercel/python"
+      "src": "app.py",
+      "use": "@vercel/python",
+      "config": {
+        "env": {
+          "MPLCONFIGDIR": "/tmp/matplotlib"
+        }
+      }
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "./app.py"
+      "dest": "app.py"
     }
   ]
 }
