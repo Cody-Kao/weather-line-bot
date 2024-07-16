@@ -1,39 +1,38 @@
 from flask import Flask, request, abort
 
-# import requests
+import requests
 
-# import json
+import json
 
-# import datetime
+import datetime
 
-# from linebot import (
-#     WebhookHandler
-# )
-# from linebot.exceptions import (
-#     InvalidSignatureError
-# )
-# from linebot.models import *
+from linebot import (
+    WebhookHandler
+)
+from linebot.exceptions import (
+    InvalidSignatureError
+)
+from linebot.models import *
 
-# from linebot.v3.messaging import (
-#     Configuration,
-#     ApiClient,
-#     MessagingApi,
-#     ReplyMessageRequest,
-#     TextMessage
-# )   
+from linebot.v3.messaging import (
+    Configuration,
+    ApiClient,
+    MessagingApi,
+    ReplyMessageRequest,
+    TextMessage
+)   
 
-# import os
+import os
 
-# import re
-# # Set MPLCONFIGDIR environment variable to a writable directory
-# os.environ['MPLCONFIGDIR'] = '/tmp/matplotlib'
-# import matplotlib
-# matplotlib.use('Agg') 
-# import matplotlib.pyplot as plt
-# import io
-# import base64
-# from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-# matplotlib.rc('font', family='Microsoft JhengHei') # 讓matplotlib正確顯示中文
+import re
+
+import matplotlib
+matplotlib.use('Agg') 
+import matplotlib.pyplot as plt
+import io
+import base64
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+matplotlib.rc('font', family='Microsoft JhengHei') # 讓matplotlib正確顯示中文
 
 # global user_position
 # user_position = {}
@@ -434,7 +433,6 @@ def home():
 #         )
     
 #主程式
-import os
 if __name__ == "__main__":
     port = 5000
     app.run(host='0.0.0.0', port=port, debug=True) # Do not run the development server or debugger in a production environment. 會洩漏內部錯誤造成資安疑慮
