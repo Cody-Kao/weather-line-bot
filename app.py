@@ -34,159 +34,159 @@ import base64
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 matplotlib.rc('font', family='Microsoft JhengHei') # 讓matplotlib正確顯示中文
 
-# global user_position
-# user_position = {}
+global user_position
+user_position = {}
 
-# city_to_code = {"宜蘭縣":'F-D0047-001',"基隆市":'F-D0047-049',"台北市":'F-D0047-061',"新北市":'F-D0047-069',"桃園市":'F-D0047-005',"新竹市":'F-D0047-053',"新竹縣":'F-D0047-009',
-#           "苗栗縣":'F-D0047-013',"台中市":'F-D0047-073',"彰化縣":'F-D0047-017',"南投縣":'F-D0047-021',"雲林縣":'F-D0047-025',
-#           "嘉義市":'F-D0047-057',"嘉義縣":'F-D0047-029',"台南市":'F-D0047-077',"高雄市":'F-D0047-065',"屏東縣":'F-D0047-033',
-#           "花蓮縣":'F-D0047-041',"台東縣":'F-D0047-037',"澎湖縣":'F-D0047-045',"連江縣":'F-D0047-081',"金門縣":'F-D0047-085'}
+city_to_code = {"宜蘭縣":'F-D0047-001',"基隆市":'F-D0047-049',"台北市":'F-D0047-061',"新北市":'F-D0047-069',"桃園市":'F-D0047-005',"新竹市":'F-D0047-053',"新竹縣":'F-D0047-009',
+          "苗栗縣":'F-D0047-013',"台中市":'F-D0047-073',"彰化縣":'F-D0047-017',"南投縣":'F-D0047-021',"雲林縣":'F-D0047-025',
+          "嘉義市":'F-D0047-057',"嘉義縣":'F-D0047-029',"台南市":'F-D0047-077',"高雄市":'F-D0047-065',"屏東縣":'F-D0047-033',
+          "花蓮縣":'F-D0047-041',"台東縣":'F-D0047-037',"澎湖縣":'F-D0047-045',"連江縣":'F-D0047-081',"金門縣":'F-D0047-085'}
 
-# authorization = os.environ.get('WEATHER_API_CODE')
+authorization = os.environ.get('WEATHER_API_CODE')
 
-# query_dict = {'tem':'溫度', 'rainfall':'降雨機率'}
+query_dict = {'tem':'溫度', 'rainfall':'降雨機率'}
 
-# measure_dict = {'tem':"攝氏°C", 'rainfall':"機率%"} 
+measure_dict = {'tem':"攝氏°C", 'rainfall':"機率%"} 
 
-# image_store = {}
+image_store = {}
 
-# def img_to_png(img):
-#     # Convert plot to PNG image
-#     pngImage = io.BytesIO()
-#     FigureCanvas(img).print_png(pngImage)
+def img_to_png(img):
+    # Convert plot to PNG image
+    pngImage = io.BytesIO()
+    FigureCanvas(img).print_png(pngImage)
     
-#     # Encode PNG image to base64 string
-#     pngImageB64String = base64.b64encode(pngImage.getvalue()).decode('utf8')
-#     return pngImageB64String
+    # Encode PNG image to base64 string
+    pngImageB64String = base64.b64encode(pngImage.getvalue()).decode('utf8')
+    return pngImageB64String
 
-# def draw(file, query, city, region):
-#     # 針對所有字體進行修改
-#     font = {
-#         'weight' : 'bold',
-#         'size'   : 15}
-#     matplotlib.rc('font', **font)
-#     prefix = file['records']['locations'][0]['location']      
-#     y = []
-#     labels = []
-#     if query == 'tem':
-#         for reg in prefix:
-#             if reg['locationName'] == region:
-#                 for description in reg['weatherElement'][0]['time']:
-#                     y.append(int(description['elementValue'][0]['value'].split('。')[2][-3:-1]))
-#                     labels.append(description['startTime'][-8:])
-#     elif query == 'rainfall':
-#         for reg in prefix:
-#             if reg['locationName'] == region:
-#                 for description in reg['weatherElement'][0]['time']:
-#                     y.append(int(description['elementValue'][0]['value'].split('。')[1][-3:-1]))
-#                     labels.append(description['startTime'][-8:])
-#     date = prefix[0]['weatherElement'][0]['time'][0]['startTime'][:10]
-#     print('date: ', date)
-#     x = [i for i in range(len(y))]
-#     fig = plt.figure(figsize=(10.5,6))
-#     axis = fig.add_subplot(1, 1, 1)
-#     axis.set_title(city+'-'+region+'('+date+')')
-#     axis.set_xlabel("時間",fontsize=18)
-#     axis.set_ylabel(measure_dict[query], fontsize=18, rotation=0, loc='top')
-#     axis.set_ylim(0, 100) # 設定y軸的範圍
-#     axis.set_xticks(x, labels, fontsize=15)
-#     axis.grid()
-#     for i,j in zip(x,y):
-#         axis.annotate(str(j),xy=(i+0.05,j+0.05), ha='center', weight ='bold',fontsize=15) # 標記加上註記的點位，並對x y值做一些offset
-#     axis.plot(x, y, "o-", label=query_dict[query])
-#     plt.legend(
-#         loc='best',
-#         shadow=True,
-#         facecolor='#ccc',
-#         edgecolor='#000',
-#         title=query_dict[query],
-#         title_fontsize=20)
-#     return fig
+def draw(file, query, city, region):
+    # 針對所有字體進行修改
+    font = {
+        'weight' : 'bold',
+        'size'   : 15}
+    matplotlib.rc('font', **font)
+    prefix = file['records']['locations'][0]['location']      
+    y = []
+    labels = []
+    if query == 'tem':
+        for reg in prefix:
+            if reg['locationName'] == region:
+                for description in reg['weatherElement'][0]['time']:
+                    y.append(int(description['elementValue'][0]['value'].split('。')[2][-3:-1]))
+                    labels.append(description['startTime'][-8:])
+    elif query == 'rainfall':
+        for reg in prefix:
+            if reg['locationName'] == region:
+                for description in reg['weatherElement'][0]['time']:
+                    y.append(int(description['elementValue'][0]['value'].split('。')[1][-3:-1]))
+                    labels.append(description['startTime'][-8:])
+    date = prefix[0]['weatherElement'][0]['time'][0]['startTime'][:10]
+    print('date: ', date)
+    x = [i for i in range(len(y))]
+    fig = plt.figure(figsize=(10.5,6))
+    axis = fig.add_subplot(1, 1, 1)
+    axis.set_title(city+'-'+region+'('+date+')')
+    axis.set_xlabel("時間",fontsize=18)
+    axis.set_ylabel(measure_dict[query], fontsize=18, rotation=0, loc='top')
+    axis.set_ylim(0, 100) # 設定y軸的範圍
+    axis.set_xticks(x, labels, fontsize=15)
+    axis.grid()
+    for i,j in zip(x,y):
+        axis.annotate(str(j),xy=(i+0.05,j+0.05), ha='center', weight ='bold',fontsize=15) # 標記加上註記的點位，並對x y值做一些offset
+    axis.plot(x, y, "o-", label=query_dict[query])
+    plt.legend(
+        loc='best',
+        shadow=True,
+        facecolor='#ccc',
+        edgecolor='#000',
+        title=query_dict[query],
+        title_fontsize=20)
+    return fig
 
-# def generate_image_and_link(tem_or_rainfall, city, region, today_or_tomorrow):
-#     if today_or_tomorrow:
-#         date = datetime.datetime.now().strftime('%Y-%m-%d')
-#     else:
-#         date = (datetime.datetime.now() + datetime.timedelta(1)).strftime('%Y-%m-%d')
-#     url = f'https://opendata.cwa.gov.tw/api/v1/rest/datastore/{city_to_code[city]}?Authorization={authorization}&format=JSON&elementName=WeatherDescription&timeFrom={date}T00%3A00%3A00&timeTo={date}T23%3A00%3A00'
-#     print("------------------url-----------------", url)
-#     req = requests.get(url)
-#     file = json.loads(req.content)
+def generate_image_and_link(tem_or_rainfall, city, region, today_or_tomorrow):
+    if today_or_tomorrow:
+        date = datetime.datetime.now().strftime('%Y-%m-%d')
+    else:
+        date = (datetime.datetime.now() + datetime.timedelta(1)).strftime('%Y-%m-%d')
+    url = f'https://opendata.cwa.gov.tw/api/v1/rest/datastore/{city_to_code[city]}?Authorization={authorization}&format=JSON&elementName=WeatherDescription&timeFrom={date}T00%3A00%3A00&timeTo={date}T23%3A00%3A00'
+    print("------------------url-----------------", url)
+    req = requests.get(url)
+    file = json.loads(req.content)
 
-#     if f"{date}{tem_or_rainfall}{city}{region}" not in image_store:
-#         img = draw(file, tem_or_rainfall, city, region)
-#         res = img_to_png(img)
-#     else:
-#         print("cache hits!")
-#         return image_store[f"{date}{tem_or_rainfall}{city}{region}"]
+    if f"{date}{tem_or_rainfall}{city}{region}" not in image_store:
+        img = draw(file, tem_or_rainfall, city, region)
+        res = img_to_png(img)
+    else:
+        print("cache hits!")
+        return image_store[f"{date}{tem_or_rainfall}{city}{region}"]
 
-#     headers = {"Authorization": "Client-ID 11c8e32c081b4ae"}
+    headers = {"Authorization": "Client-ID 11c8e32c081b4ae"}
 
-#     url = "https://api.imgur.com/3/image"
+    url = "https://api.imgur.com/3/image"
 
-#     req = requests.post(
-#         url, 
-#         headers = headers,
-#         data = {  'image': res
-#         }
-#     )
-#     print(req.status_code)
-#     data = json.loads(req.text)['data']
-#     image_store[f"{date}{tem_or_rainfall}{city}{region}"] = data['link'] # save the url to the in-memory store
-#     print(data['link'])
-#     return data['link']
+    req = requests.post(
+        url, 
+        headers = headers,
+        data = {  'image': res
+        }
+    )
+    print(req.status_code)
+    data = json.loads(req.text)['data']
+    image_store[f"{date}{tem_or_rainfall}{city}{region}"] = data['link'] # save the url to the in-memory store
+    print(data['link'])
+    return data['link']
 
-# def getTemOrRain(file, query, city, region):
-#     prefix = file['records']['locations'][0]['location']      
-#     dataSet = []
-#     if query == 'tem':
-#         for reg in prefix:
-#             if reg['locationName'] == region:
-#                 for description in reg['weatherElement'][0]['time']:
-#                     dataSet.append(int(description['elementValue'][0]['value'].split('。')[2][-3:-1]))
-#     elif query == 'rainfall':
-#         for reg in prefix:
-#             if reg['locationName'] == region:
-#                 for description in reg['weatherElement'][0]['time']:
-#                     dataSet.append(int(description['elementValue'][0]['value'].split('。')[1][-3:-1]))
-#     date = prefix[0]['weatherElement'][0]['time'][0]['startTime'][:10]
-#     print('date: ', date)
+def getTemOrRain(file, query, city, region):
+    prefix = file['records']['locations'][0]['location']      
+    dataSet = []
+    if query == 'tem':
+        for reg in prefix:
+            if reg['locationName'] == region:
+                for description in reg['weatherElement'][0]['time']:
+                    dataSet.append(int(description['elementValue'][0]['value'].split('。')[2][-3:-1]))
+    elif query == 'rainfall':
+        for reg in prefix:
+            if reg['locationName'] == region:
+                for description in reg['weatherElement'][0]['time']:
+                    dataSet.append(int(description['elementValue'][0]['value'].split('。')[1][-3:-1]))
+    date = prefix[0]['weatherElement'][0]['time'][0]['startTime'][:10]
+    print('date: ', date)
     
-#     print(dataSet)
-#     delimitor = "=="*12
-#     if query == 'tem':
-#         return f"{date}\n{delimitor}最高溫: {max(dataSet)}°C\n平均溫度: {sum(dataSet)//len(dataSet)}°C\n最低溫度: {min(dataSet)}°C"
-#     elif query == 'rainfall':
-#         return f"{date}\n{delimitor}最高降雨機率: {max(dataSet)}%\n平均降雨機率: {sum(dataSet)//len(dataSet)}%\n最低降雨機率: {min(dataSet)}%"
+    print(dataSet)
+    delimitor = "=="*12
+    if query == 'tem':
+        return f"{date}\n{delimitor}最高溫: {max(dataSet)}°C\n平均溫度: {sum(dataSet)//len(dataSet)}°C\n最低溫度: {min(dataSet)}°C"
+    elif query == 'rainfall':
+        return f"{date}\n{delimitor}最高降雨機率: {max(dataSet)}%\n平均降雨機率: {sum(dataSet)//len(dataSet)}%\n最低降雨機率: {min(dataSet)}%"
 
-# def getData(tem_or_rainfall, city, region, today_or_tomorrow):
-#     if today_or_tomorrow:
-#         date = datetime.datetime.now().strftime('%Y-%m-%d')
-#     else:
-#         date = (datetime.datetime.now() + datetime.timedelta(1)).strftime('%Y-%m-%d')
+def getData(tem_or_rainfall, city, region, today_or_tomorrow):
+    if today_or_tomorrow:
+        date = datetime.datetime.now().strftime('%Y-%m-%d')
+    else:
+        date = (datetime.datetime.now() + datetime.timedelta(1)).strftime('%Y-%m-%d')
         
-#     url = f'https://opendata.cwa.gov.tw/api/v1/rest/datastore/{city_to_code[city]}?Authorization={authorization}&format=JSON&elementName=WeatherDescription&timeFrom={date}T00%3A00%3A00&timeTo={date}T23%3A00%3A00'
-#     print("------------------url-----------------", url)
-#     req = requests.get(url)
-#     file = json.loads(req.content)
-#     data = getTemOrRain(file, tem_or_rainfall, city, region)
+    url = f'https://opendata.cwa.gov.tw/api/v1/rest/datastore/{city_to_code[city]}?Authorization={authorization}&format=JSON&elementName=WeatherDescription&timeFrom={date}T00%3A00%3A00&timeTo={date}T23%3A00%3A00'
+    print("------------------url-----------------", url)
+    req = requests.get(url)
+    file = json.loads(req.content)
+    data = getTemOrRain(file, tem_or_rainfall, city, region)
     
-#     return data
+    return data
 
-# def get_pm25(user_city):
-#     user_city = user_city.replace('台', '臺')
-#     url = 'http://data.moenv.gov.tw/api/frontstage/datastore/search-result.download'
-#     data = {'resource_id': "d5fa0c88-b846-4362-9ed1-bf283aa52857", 'limit': 100, 'offset': 0, 'download_type': "json"}
-#     req = requests.post(url, data = data)
-#     file = json.loads(req.content)
-#     res = []
-#     for county in file:
-#         if county['county'] == user_city:
-#             res.append([county['site'], county['pm25']])
+def get_pm25(user_city):
+    user_city = user_city.replace('台', '臺')
+    url = 'http://data.moenv.gov.tw/api/frontstage/datastore/search-result.download'
+    data = {'resource_id': "d5fa0c88-b846-4362-9ed1-bf283aa52857", 'limit': 100, 'offset': 0, 'download_type': "json"}
+    req = requests.post(url, data = data)
+    file = json.loads(req.content)
+    res = []
+    for county in file:
+        if county['county'] == user_city:
+            res.append([county['site'], county['pm25']])
     
-#     res = sorted(res, key=lambda x:int(x[1]) if x[1] else 0, reverse=True)
-#     print(res)
-#     return (res[:4], county['datacreationdate']) # 取該地區前四筆是因為最多回復五則訊息 且有一筆保留給訊息標頭
+    res = sorted(res, key=lambda x:int(x[1]) if x[1] else 0, reverse=True)
+    print(res)
+    return (res[:4], county['datacreationdate']) # 取該地區前四筆是因為最多回復五則訊息 且有一筆保留給訊息標頭
 
 app = Flask(__name__)
 
