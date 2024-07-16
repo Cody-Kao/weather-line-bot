@@ -25,7 +25,8 @@ from linebot.v3.messaging import (
 import os
 
 import re
-
+# Set MPLCONFIGDIR environment variable to a writable directory
+os.environ['MPLCONFIGDIR'] = '/tmp/matplotlib'
 import matplotlib
 matplotlib.use('Agg') 
 import matplotlib.pyplot as plt
