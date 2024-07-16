@@ -436,5 +436,5 @@ def handle_message(event):
 #主程式
 import os
 if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 5000))
+    port = 5000
     app.run(host='0.0.0.0', port=port, debug=True) # Do not run the development server or debugger in a production environment. 會洩漏內部錯誤造成資安疑慮
