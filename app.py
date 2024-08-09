@@ -26,7 +26,9 @@ import os
 
 import re
 
-os.environ['MPLCONFIGDIR'] = '/opt/myapplication/.config/matplotlib'
+if 'MPLCONFIGDIR' not in os.environ or os.environ['MPLCONFIGDIR'].startswith('/home'):
+    import tempfile
+    os.environ['MPLCONFIGDIR'] = tempfile.mkdtemp()
 
 import matplotlib
 matplotlib.use('Agg') 
