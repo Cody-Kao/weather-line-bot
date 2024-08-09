@@ -26,7 +26,7 @@ import os
 
 import re
 
-os.environ['MPLCONFIGDIR'] = os.getcwd() + "/configs/"
+os.environ['MPLCONFIGDIR'] = '/opt/myapplication/.config/matplotlib'
 
 import matplotlib
 matplotlib.use('Agg') 
