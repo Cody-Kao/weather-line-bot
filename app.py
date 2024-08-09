@@ -26,6 +26,8 @@ import os
 
 import re
 
+os.environ['MPLCONFIGDIR'] = os.getcwd() + "/configs/"
+
 import matplotlib
 matplotlib.use('Agg') 
 import matplotlib.pyplot as plt
