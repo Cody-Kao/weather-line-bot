@@ -26,10 +26,6 @@ import os
 
 import re
 
-if 'MPLCONFIGDIR' not in os.environ or os.environ['MPLCONFIGDIR'].startswith('/home'):
-    import tempfile
-    os.environ['MPLCONFIGDIR'] = tempfile.mkdtemp()
-
 import matplotlib
 matplotlib.use('Agg') 
 import matplotlib.pyplot as plt
