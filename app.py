@@ -197,7 +197,7 @@ app = Flask(__name__)
 # 必須放上自己的Channel Access Token
 configuration = Configuration(access_token=os.environ.get('channel_access_token')) # os.environ['channel_access_token']
 # 必須放上自己的Channel Secret
-handler = WebhookHandler(os.environ.get('channel_secret')) # os.environ['channel_secret']
+line_handler = WebhookHandler(os.environ.get('channel_secret')) # os.environ['channel_secret']
 
 #line_bot_api.push_message('U2ddc3390d5074b7f187a3e5518ed3480', TextSendMessage(text='你可以開始了')) # os.environ['user_id']
 
@@ -217,7 +217,7 @@ def callback():
 
     # handle webhook body
     try:
-        handler.handle(body, signature)
+        line_handler.handle(body, signature)
     except InvalidSignatureError:
         app.logger.info("Invalid signature. Please check your channel access token/channel secret.")
         abort(400)
@@ -227,7 +227,7 @@ def callback():
  
 #訊息傳遞區塊
 ##### 基本上程式編輯都在這個function #####
-@handler.add(MessageEvent, message=TextMessage)
+@line_handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     with ApiClient(configuration) as api_client:
         body = request.get_json()
@@ -389,7 +389,7 @@ def handle_message(event):
             raise  # Re-raise the exception to see the full traceback
         
 
-@handler.add(MessageEvent, message=StickerMessage)
+@line_handler.add(MessageEvent, message=StickerMessage)
 def handle_message(event):
     with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
@@ -401,7 +401,7 @@ def handle_message(event):
             )
         )
 
-@handler.add(MessageEvent, message=LocationMessage)
+@line_handler.add(MessageEvent, message=LocationMessage)
 def handle_message(event):
     with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
