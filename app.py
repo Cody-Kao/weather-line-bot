@@ -39,17 +39,13 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 # matplotlib.rc('font', family='Microsoft JhengHei') # 讓matplotlib正確顯示中文(只在本地有效)
 
 # 在vercel上也有效的通用方法(但vercel報錯: A Serverless Function has exceeded the unzipped maximum size of 250 MB)
-"""
+
 import matplotlib.font_manager as fm
 font_path = "./font/microsoft-jhenghei.ttf"
 font_name = "microsoft-jhenghei"
 fe = fm.FontEntry(fname=font_path, name=font_name)
 fm.fontManager.ttflist.append(fe)
 matplotlib.rcParams["font.family"] = fe.name
-"""
-
-# 折衷辦法 => 弄一個下位替代的字型 'AR PL UMing CN'
-plt.rcParams['font.family'] = 'AR PL UMing CN'
 
 
 global user_position
