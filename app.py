@@ -279,6 +279,11 @@ def handle_message(event):
                         print(reg)
                         print("----------------------------")
                         print(reg['weatherElement'][0]['time'])
+                        # 檢查是否有late night request造成的錯誤
+                        if reg['weatherElement'][0]['time'] == []:
+                            message = TextMessage(text="抱歉 深夜時段中央氣象局未提供足夠資料得以回覆您，造成不便請見諒")
+                            return
+                        
                         description = reg['weatherElement'][0]['time'][0]['elementValue'][0]['value'].split('。')
                         print('description: ', description)
                         tem = description[2][-3:-1]
