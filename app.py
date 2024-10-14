@@ -292,18 +292,19 @@ def handle_message(event):
                 message = TextMessage(text='請先設定使用者位置$', emojis=emoji)
         elif re.match('今明降雨機率',user_text):
             if event.source.user_id in user_position:
+                # Headers
+                headers = {
+                    'Content-Type': 'application/json',
+                    'Authorization': f'Bearer {os.environ.get('channel_access_token')}'
+                }
+                replyData = {}
                 user_address = user_position[event.source.user_id]
                 today_data = getData('rainfall', user_address[0], user_address[1], 1)
                 tomorrow_data = getData('rainfall', user_address[0], user_address[1], 0)
+                # 檢查是否有late night request造成的錯誤
                 if today_data == "error" or tomorrow_data == "error":
-                    # Headers
-                    headers = {
-                        'Content-Type': 'application/json',
-                        'Authorization': f'Bearer {os.environ.get('channel_access_token')}'
-                    }
-
                     # Data payload
-                    data = {
+                    replyData = {
                         'replyToken': event.reply_token,
                         'messages': [
                             {
@@ -312,49 +313,37 @@ def handle_message(event):
                             }
                         ]
                     }
-                    # Send the POST request
-                    response = requests.post('https://api.line.me/v2/bot/message/reply', headers=headers, data=json.dumps(data))
+                else:
+                    textMsg = f"以下為{user_address[0]}{user_address[1]}之降雨機率\n\n{today_data}\n\n{tomorrow_data}"
 
-                    # Print the response
-                    print(response.status_code)
-                    print(response.json())
-                    return 
-                textMsg = f"以下為{user_address[0]}{user_address[1]}之降雨機率\n\n{today_data}\n\n{tomorrow_data}"
+                    today_img_url = generate_image_and_link('rainfall', user_address[0], user_address[1], 1)
+                    tomorrow_img_url = generate_image_and_link('rainfall', user_address[0], user_address[1], 0)
 
-                today_img_url = generate_image_and_link('rainfall', user_address[0], user_address[1], 1)
-                tomorrow_img_url = generate_image_and_link('rainfall', user_address[0], user_address[1], 0)
+                    # 一個reply_token只能被使用一次! 所以一次就把所有訊息發完
 
-                # 一個reply_token只能被使用一次! 所以一次就把所有訊息發完
-        
-                # Headers
-                headers = {
-                    'Content-Type': 'application/json',
-                    'Authorization': f'Bearer {os.environ.get('channel_access_token')}'
-                }
-
-                # Data payload
-                data = {
-                    'replyToken': event.reply_token,
-                    'messages': [
-                        {
-                            "type":"text",
-                            "text":textMsg
-                        },
-                        {
-                            'type': 'image',
-                            "originalContentUrl": today_img_url,
-                            "previewImageUrl": today_img_url
-                        },
-                        {
-                            'type': 'image',
-                            "originalContentUrl": tomorrow_img_url,
-                            "previewImageUrl": tomorrow_img_url
-                        }
-                    ]
-                }
+                    # Data payload
+                    replyData = {
+                        'replyToken': event.reply_token,
+                        'messages': [
+                            {
+                                "type":"text",
+                                "text":textMsg
+                            },
+                            {
+                                'type': 'image',
+                                "originalContentUrl": today_img_url,
+                                "previewImageUrl": today_img_url
+                            },
+                            {
+                                'type': 'image',
+                                "originalContentUrl": tomorrow_img_url,
+                                "previewImageUrl": tomorrow_img_url
+                            }
+                        ]
+                    }
 
                 # Send the POST request
-                response = requests.post('https://api.line.me/v2/bot/message/reply', headers=headers, data=json.dumps(data))
+                response = requests.post('https://api.line.me/v2/bot/message/reply', headers=headers, data=json.dumps(replyData))
 
                 # Print the response
                 print(response.status_code)
@@ -368,49 +357,59 @@ def handle_message(event):
                 user_address = user_position[event.source.user_id]
                 today_data = getData('tem', user_address[0], user_address[1], 1)
                 tomorrow_data = getData('tem', user_address[0], user_address[1], 0)
-                textMsg = f"以下為{user_address[0]}{user_address[1]}之氣溫\n\n{today_data}\n\n{tomorrow_data}"
-                
-                today_img_url = generate_image_and_link('tem', user_address[0], user_address[1], 1)
-                tomorrow_img_url = generate_image_and_link('tem', user_address[0], user_address[1], 0)
 
-                # 一個reply_token只能被使用一次! 所以一次就把所有訊息發完
-        
                 # Headers
                 headers = {
                     'Content-Type': 'application/json',
                     'Authorization': f'Bearer {os.environ.get('channel_access_token')}'
                 }
+                replyData = {}
+                if today_data == "error" or tomorrow_data == "error":
+                    # Data payload
+                    replyData = {
+                        'replyToken': event.reply_token,
+                        'messages': [
+                            {
+                                "type":"text",
+                                "text":"抱歉 深夜時段中央氣象局未提供足夠資料得以回覆您，造成不便請見諒"
+                            }
+                        ]
+                    }
+                else:
+                    textMsg = f"以下為{user_address[0]}{user_address[1]}之氣溫\n\n{today_data}\n\n{tomorrow_data}"
+                    today_img_url = generate_image_and_link('tem', user_address[0], user_address[1], 1)
+                    tomorrow_img_url = generate_image_and_link('tem', user_address[0], user_address[1], 0)
 
-                # Data payload
-                data = {
-                    'replyToken': event.reply_token,
-                    'messages': [
-                        {
-                            "type":"text",
-                            "text":textMsg
-                        },
-                        {
-                            'type': 'image',
-                            "originalContentUrl": today_img_url,
-                            "previewImageUrl": today_img_url
-                        },
-                        {
-                            'type': 'image',
-                            "originalContentUrl": tomorrow_img_url,
-                            "previewImageUrl": tomorrow_img_url
-                        }
-                    ]
-                }
+                    # 一個reply_token只能被使用一次! 所以一次就把所有訊息發完
+                    # Data payload
+                    replyData = {
+                        'replyToken': event.reply_token,
+                        'messages': [
+                            {
+                                "type":"text",
+                                "text":textMsg
+                            },
+                            {
+                                'type': 'image',
+                                "originalContentUrl": today_img_url,
+                                "previewImageUrl": today_img_url
+                            },
+                            {
+                                'type': 'image',
+                                "originalContentUrl": tomorrow_img_url,
+                                "previewImageUrl": tomorrow_img_url
+                            }
+                        ]
+                    }
 
                 # Send the POST request
-                response = requests.post('https://api.line.me/v2/bot/message/reply', headers=headers, data=json.dumps(data))
+                response = requests.post('https://api.line.me/v2/bot/message/reply', headers=headers, data=json.dumps(replyData))
 
                 # Print the response
                 print(response.status_code)
                 print(response.json())
 
                 return
-
             else:  
                 message = TextMessage(text='請先設定使用者位置$', emojis=emoji)
         elif re.match('當前pm2.5',user_text):
