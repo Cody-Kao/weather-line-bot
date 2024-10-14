@@ -40,15 +40,21 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 # 因為vercel serverless function有size limit，不能直接boundle font file，所以用CDN的方式取得
 import matplotlib.font_manager as fm
-import urllib.request
-# Download the font to /tmp folder
-url = 'https://path-to-cdn/microsoft-jhenghei.ttf'
-font_path = '/tmp/microsoft-jhenghei.ttf'
-urllib.request.urlretrieve(url, font_path)
+import urllib
+# GitHub raw URL to the font file (ensure it points to the raw .ttf file)
+github_url = 'https://github.com/a7532ariel/ms-web/blob/master/Microsoft-JhengHei.ttf'
 
-# Load the font into matplotlib
+# Define the path in the /tmp directory on Vercel
+font_path = '/tmp/Microsoft-JhengHei.ttf'
+
+# Step 1: Download the font and save it to /tmp
+if not os.path.exists(font_path):
+    urllib.request.urlretrieve(github_url, font_path)
+
+# Step 2: Add the font to matplotlib's font manager
 fm.fontManager.addfont(font_path)
-# Step 4: Set the font as the default
+
+# Step 3: Set the font as the default in matplotlib
 prop = fm.FontProperties(fname=font_path)
 plt.rcParams['font.family'] = prop.get_name()
 
