@@ -281,16 +281,16 @@ def handle_message(event):
                         print(reg['weatherElement'][0]['time'])
                         # 檢查是否有late night request造成的錯誤
                         if reg['weatherElement'][0]['time'] == []:
-                            message = TextMessage(text="抱歉 深夜時段中央氣象局未提供足夠資料得以回覆您，造成不便請見諒")
-                            return
-                        
-                        description = reg['weatherElement'][0]['time'][0]['elementValue'][0]['value'].split('。')
-                        print('description: ', description)
-                        tem = description[2][-3:-1]
-                        rainfall = description[1][-3:-1]
-                        wind = description[4][-4]
-                        slogan = description[0]
-                info = f"地區: {city}-{region}\n溫度: {tem}°C\n降雨機率: {rainfall}%\n風速: {wind}m/s\n天氣情況: {slogan}"
+                            info = "抱歉 深夜時段中央氣象局未提供足夠資料得以回覆您，造成不便請見諒"
+                        else:                        
+                            description = reg['weatherElement'][0]['time'][0]['elementValue'][0]['value'].split('。')
+                            print('description: ', description)
+                            tem = description[2][-3:-1]
+                            rainfall = description[1][-3:-1]
+                            wind = description[4][-4]
+                            slogan = description[0]
+                            info = f"地區: {city}-{region}\n溫度: {tem}°C\n降雨機率: {rainfall}%\n風速: {wind}m/s\n天氣情況: {slogan}"
+                        break
                 print("--------------info--------------", info)
                 message = TextMessage(text=info)
             else:
