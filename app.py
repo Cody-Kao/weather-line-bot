@@ -43,7 +43,7 @@ import matplotlib.font_manager as fm
 import urllib
 # GitHub raw URL to the font file (ensure it points to the raw .ttf file)
 github_url = 'https://github.com/a7532ariel/ms-web/blob/master/Microsoft-JhengHei.ttf'
-
+github_url+="?raw=true"
 # Define the path in the /tmp directory on Vercel
 font_path = '/tmp/Microsoft-JhengHei.ttf'
 
