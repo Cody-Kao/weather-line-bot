@@ -193,6 +193,8 @@ def getData(tem_or_rainfall, city, region, today_or_tomorrow):
     print("------------------url-----------------", url)
     req = requests.get(url)
     file = json.loads(req.content)
+    if file['records']['locations'][0]['location'][0]['weatherElement'][0]['time'] == []:
+        return "error" # too late in night, no time data provided in API
     data = getTemOrRain(file, tem_or_rainfall, city, region)
     
     return data
@@ -293,6 +295,30 @@ def handle_message(event):
                 user_address = user_position[event.source.user_id]
                 today_data = getData('rainfall', user_address[0], user_address[1], 1)
                 tomorrow_data = getData('rainfall', user_address[0], user_address[1], 0)
+                if today_data == "error" or tomorrow_data == "error":
+                    # Headers
+                    headers = {
+                        'Content-Type': 'application/json',
+                        'Authorization': f'Bearer {os.environ.get('channel_access_token')}'
+                    }
+
+                    # Data payload
+                    data = {
+                        'replyToken': event.reply_token,
+                        'messages': [
+                            {
+                                "type":"text",
+                                "text":"抱歉 深夜時段中央氣象局未提供足夠資料得以回覆您，造成不便請見諒"
+                            }
+                        ]
+                    }
+                    # Send the POST request
+                    response = requests.post('https://api.line.me/v2/bot/message/reply', headers=headers, data=json.dumps(data))
+
+                    # Print the response
+                    print(response.status_code)
+                    print(response.json())
+                    return 
                 textMsg = f"以下為{user_address[0]}{user_address[1]}之降雨機率\n\n{today_data}\n\n{tomorrow_data}"
 
                 today_img_url = generate_image_and_link('rainfall', user_address[0], user_address[1], 1)
