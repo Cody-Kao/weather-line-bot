@@ -37,16 +37,14 @@ import io
 import base64
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 # matplotlib.rc('font', family='Microsoft JhengHei') # 讓matplotlib正確顯示中文(只在本地有效)
-
 # 在vercel上也有效的通用方法(但vercel報錯: A Serverless Function has exceeded the unzipped maximum size of 250 MB)
 
 import matplotlib.font_manager as fm
-font_path = "./font/microsoft-jhenghei.ttf"
-font_name = "microsoft-jhenghei"
+font_path = "./font/NotoSansTC-VariableFont_wght.ttf"
+font_name = "NotoSansTC-VariableFont_wght"
 fe = fm.FontEntry(fname=font_path, name=font_name)
 fm.fontManager.ttflist.append(fe)
 matplotlib.rcParams["font.family"] = fe.name
-
 
 global user_position
 user_position = {}
